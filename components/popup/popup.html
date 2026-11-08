@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Ving Extension Participation" />
+    <meta name="theme-color" content="#000000" />
+
+    <link rel="icon" href="../../icon.jpg" />
+    <link rel="stylesheet" href="popup.css" />
+
+    <title>Ving Extension Participation</title>
+</head>
+<body>
+    <main class="card">
+        <header class="card-header">
+            <h1 class="card-title">Coleta da semana: </h1>
+            <p class="periodo">
+                <span class="mono periodo-valor" id="periodo-valor"></span>
+            </p>
+        </header>
+
+
+        <section class="card-body">
+            <button id="btn-copiar" class="btn-copiar" type="button">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="5" y="4" width="14" height="18" rx="3"></rect>
+                <path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"></path>
+                <rect x="9" y="2" width="6" height="4" rx="1.2" fill="currentColor" stroke="none"></rect>
+                </svg>
+                <span>Copiar e gerar .txt</span>
+            </button>
+
+            <p class="atualizacao">
+                <svg class="icon icon-relogio" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 7v5l3 2"></path>
+                </svg>
+                <span>Última atualização: <span class="mono" id="ultima-atualizacao">24/10 às 16:45</span></span>
+            </p>
+        </section>
+    </main>
+    
+    <script src="../../scripts/jogadores.js" defer></script>
+    <script src="../../scripts/configEventos.js" defer></script>
+    <script src="../../scripts/periodo.js" defer></script>
+    <script src="../../scripts/participacao.js" defer></script>
+
+    <script src="popup.js" defer></script>
+
+</body>
+
+</html>

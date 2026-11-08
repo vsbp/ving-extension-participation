@@ -1,0 +1,147 @@
+:root {
+  --bg-fundo: #0a131a;
+  --card-topo: #172a38;
+  --card-base: #152632;
+  --card-borda: #25475c;
+  --divisor: #1f3b4c;
+  --texto: #ffffff;
+  --texto-suave: #7d9aac;
+  --destaque: #8fd6f5;
+  --btn-1: #a3dcf2;
+  --btn-2: #b9e6f8;
+  --btn-texto: #0d1b24;
+
+  --fonte-ui: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fonte-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 400px;
+  padding: 12px;
+  background: radial-gradient(120% 120% at 50% 0%, #0f1c25 0%, var(--bg-fundo) 70%);
+  color: var(--texto);
+  font-family: var(--fonte-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+  font-weight: 600;
+  color: var(--destaque);
+}
+
+/* Card */
+.card {
+  background: linear-gradient(180deg, var(--card-topo), var(--card-base));
+  border: 1px solid var(--card-borda);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px;
+  border-bottom: 1px solid var(--divisor);
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.periodo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.periodo-valor {
+  font-size: 14px;
+}
+
+/* Corpo */
+.card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding: 20px 60px;
+}
+
+.btn-copiar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 40px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(90deg, var(--btn-1), var(--btn-2));
+  color: var(--btn-texto);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(143, 214, 245, 0.22);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.btn-copiar:hover {
+  filter: brightness(1.04);
+  box-shadow: 0 10px 26px rgba(143, 214, 245, 0.32);
+}
+
+.btn-copiar:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.btn-copiar:focus-visible {
+  outline: 2px solid var(--texto);
+  outline-offset: 3px;
+}
+
+.btn-copiar .icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+/* Última atualização */
+.atualizacao {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--texto-suave);
+}
+
+.atualizacao .mono {
+  font-size: 13px;
+}
+
+.icon-relogio {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: #5f8197;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-copiar {
+    transition: none;
+  }
+}

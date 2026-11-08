@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Ving Participation",
+  "version": "1.1.0",
+  "description": "Registra a participação dos jogadores nos eventos do clã Ving e preenche a planilha.",
+  "icons": {
+    "16": "icon.jpg",
+    "48": "icon.jpg",
+    "128": "icon.jpg"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icon.jpg",
+      "24": "icon.jpg",
+      "32": "icon.jpg"
+    },
+    "default_title": "Ving Participation",
+    "default_popup": "components/popup/popup.html"
+  },
+  "host_permissions": [
+    "https://ving.mobi/*"
+  ],
+  "permissions": ["storage", "activeTab", "scripting", "clipboardWrite"],
+  "host_permissions": [
+    "https://ving.mobi/*",
+    "https://script.google.com/*",
+    "https://script.googleusercontent.com/*"
+  ]
+}
