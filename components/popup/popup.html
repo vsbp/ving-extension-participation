@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Ving Extension Participation" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#0b0b1f" />
 
     <link rel="icon" href="../../icon.jpg" />
     <link rel="stylesheet" href="popup.css" />
@@ -15,42 +15,85 @@
 <body>
     <main class="card">
         <header class="card-header">
-            <h1 class="card-title">Coleta da semana: </h1>
+            <div class="titulo-wrap">
+                <span class="status-dot" aria-hidden="true"></span>
+                <h1 class="card-title">Coleta da semana</h1>
+            </div>
             <p class="periodo">
                 <span class="mono periodo-valor" id="periodo-valor"></span>
             </p>
         </header>
 
+        <div id="status-atualizacao" role="status" aria-live="polite">
+            <span id="status-mensagem"></span>
+        </div>
 
         <section class="card-body">
-            <button id="btn-copiar" class="btn-copiar" type="button">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="5" y="4" width="14" height="18" rx="3"></rect>
-                <path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"></path>
-                <rect x="9" y="2" width="6" height="4" rx="1.2" fill="currentColor" stroke="none"></rect>
-                </svg>
-                <span>Copiar e gerar .txt</span>
-            </button>
+            <div class="botoes">
+                <!-- Botão 1: Copiar e gerar .txt -->
+                <button id="btn-copiar" class="btn btn-ciano" type="button">
+                    <span class="btn-icon-box">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 4v10"></path>
+                            <path d="M8 10.5l4 4 4-4"></path>
+                            <path d="M5 19h14"></path>
+                        </svg>
+                    </span>
+
+                    <span class="btn-textos">
+                        <span class="btn-titulo">Copiar e gerar .txt</span>
+                        <span class="btn-sub">Copia texto e baixa arquivo</span>
+                    </span>
+
+                    <svg class="icon icon-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5 12h14"></path>
+                        <path d="M13 6l6 6-6 6"></path>
+                    </svg>
+                </button>
+
+                <!-- Botão 2: Copiar formatado (.txt) -->
+                <button id="btn-formatado" class="btn btn-roxo" type="button">
+                    <span class="btn-icon-box">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                            <path d="M3 10h18"></path>
+                            <path d="M9 10v10"></path>
+                            <path d="M15 10v10"></path>
+                        </svg>
+                    </span>
+
+                    <span class="btn-textos">
+                        <span class="btn-titulo">Copiar formatado (.txt)</span>
+                        <span class="btn-sub">Layout tabular e organizado</span>
+                    </span>
+
+                    <svg class="icon icon-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5 12h14"></path>
+                        <path d="M13 6l6 6-6 6"></path>
+                    </svg>
+                </button>
+            </div>
 
             <p class="atualizacao">
                 <svg class="icon icon-relogio" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="M12 7v5l3 2"></path>
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 7v5l3 2"></path>
                 </svg>
-                <span>Última atualização: <span class="mono" id="ultima-atualizacao">24/10 às 16:45</span></span>
+                <span>Última atualização: <span id="ultima-atualizacao">24/10 às 16:45</span></span>
             </p>
         </section>
     </main>
-    
+
     <script src="../../scripts/jogadores.js" defer></script>
     <script src="../../scripts/configEventos.js" defer></script>
     <script src="../../scripts/periodo.js" defer></script>
     <script src="../../scripts/participacao.js" defer></script>
 
     <script src="popup.js" defer></script>
-
 </body>
-
 </html>

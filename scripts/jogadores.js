@@ -1,3 +1,4 @@
+
 const JOGADORES_ATIVOS = [];
 
 function normalizarNome(nome) {
@@ -18,29 +19,46 @@ async function detectarClanId(tabId) {
         target: { tabId },
 
         func: () => {
+            const normalizarTexto = (texto) =>
+                texto
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .trim()
+                    .toLowerCase()
+                    .replace(/\s+/g, " ");
+
             const links = [
-                ...document.querySelectorAll('a[href*="/clan?id="]')
+                ...document.querySelectorAll('a[href*="/clan"]')
             ];
 
-            const linkDoClan = links.find((a) => {
-                const url = new URL(
-                    a.getAttribute("href"),
-                    location.origin
-                );
+            // Procura o link "O Meu Clã" no menu.
+            const linkDoMeuClan = links.find((link) => {
+                try {
+                    const url = new URL(
+                        link.getAttribute("href"),
+                        location.origin
+                    );
 
-                return (
-                    url.pathname === "/clan" &&
-                    url.searchParams.has("id") &&
-                    url.searchParams.get("online") === "1"
-                );
+                    if (url.pathname !== "/clan") {
+                        return false;
+                    }
+
+                    const texto = normalizarTexto(
+                        link.textContent
+                    );
+
+                    return texto.includes("meu cla");
+                } catch {
+                    return false;
+                }
             });
 
-            if (!linkDoClan) {
+            if (!linkDoMeuClan) {
                 return null;
             }
 
             const url = new URL(
-                linkDoClan.getAttribute("href"),
+                linkDoMeuClan.getAttribute("href"),
                 location.origin
             );
 
@@ -52,7 +70,7 @@ async function detectarClanId(tabId) {
 
     if (!clanId) {
         throw new Error(
-            "Não foi possível identificar o clã da conta logada."
+            'Não foi possível identificar o link "O Meu Clã" nesta página.'
         );
     }
 
@@ -74,7 +92,6 @@ async function atualizarJogadoresAtivos(tabId) {
         args: [clanId],
 
         func: async (idClan) => {
-
             const jogadores = new Map();
 
             let ultimaPagina = 1;
@@ -105,7 +122,7 @@ async function atualizarJogadoresAtivos(tabId) {
                     "text/html"
                 );
 
-                // Jogadores da página atual
+                // Jogadores da página atual.
                 const membros = [
                     ...documento.querySelectorAll("a.clan_member")
                 ];
@@ -121,7 +138,10 @@ async function atualizarJogadoresAtivos(tabId) {
 
                     const href = membro.getAttribute("href") || "";
 
-                    const urlJogador = new URL(href, location.origin);
+                    const urlJogador = new URL(
+                        href,
+                        location.origin
+                    );
 
                     const playerId = urlJogador.searchParams.get(
                         "player_id"
@@ -131,11 +151,7 @@ async function atualizarJogadoresAtivos(tabId) {
 
                     // Usa o ID para evitar jogadores duplicados.
                     // Se não houver ID, utiliza o nome normalizado.
-                    const chave = playerId || nome
-                        .normalize("NFD")
-                        .replace(/[\u0300-\u036f]/g, "")
-                        .trim()
-                        .toLowerCase();
+                    const chave = playerId || normalizarNome(nome);
 
                     jogadores.set(chave, nome);
                 });
@@ -179,8 +195,7 @@ async function atualizarJogadoresAtivos(tabId) {
                 pagina <= ultimaPagina && pagina <= MAX_PAGINAS;
                 pagina++
             ) {
-                const quantidade = await buscarPagina(pagina);
-
+                await buscarPagina(pagina);
             }
 
             if (ultimaPagina > MAX_PAGINAS) {

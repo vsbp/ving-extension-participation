@@ -8,9 +8,28 @@ const VERSAO_BANCO = 1;
 const NOME_STORE = "arquivos";
 const CHAVE_ARQUIVO = "relatorio-semanal";
 
+let arquivoSalvo = null;
+
 
 // ==========================================
-// 1. ABRIR BANCO DE DADOS
+// 1. EXIBIR MENSAGEM DE STATUS
+// ==========================================
+
+function atualizarStatus(mensagem, tipo = "") {
+    const elemento = document.getElementById("status-mensagem");
+
+    if (!elemento) {
+        console.warn("Elemento de status não encontrado.");
+        return;
+    }
+
+    elemento.textContent = mensagem;
+    elemento.className = tipo;
+}
+
+
+// ==========================================
+// 2. ABRIR BANCO DE DADOS
 // ==========================================
 
 function abrirBanco() {
@@ -28,19 +47,14 @@ function abrirBanco() {
             }
         };
 
-        requisicao.onsuccess = () => {
-            resolve(requisicao.result);
-        };
-
-        requisicao.onerror = () => {
-            reject(requisicao.error);
-        };
+        requisicao.onsuccess = () => resolve(requisicao.result);
+        requisicao.onerror = () => reject(requisicao.error);
     });
 }
 
 
 // ==========================================
-// 2. RECUPERAR REFERÊNCIA DO ARQUIVO
+// 3. RECUPERAR REFERÊNCIA DO ARQUIVO
 // ==========================================
 
 async function recuperarReferenciaArquivo() {
@@ -64,12 +78,17 @@ async function recuperarReferenciaArquivo() {
         };
 
         transacao.oncomplete = () => banco.close();
+
+        transacao.onerror = () => {
+            banco.close();
+            reject(transacao.error);
+        };
     });
 }
 
 
 // ==========================================
-// 3. SALVAR REFERÊNCIA DO ARQUIVO
+// 4. SALVAR REFERÊNCIA DO ARQUIVO
 // ==========================================
 
 async function salvarReferenciaArquivo(handle) {
@@ -104,49 +123,91 @@ async function salvarReferenciaArquivo(handle) {
 
 
 // ==========================================
-// 4. OBTER ARQUIVO PARA ATUALIZAÇÃO
+// 5. REMOVER REFERÊNCIA DO ARQUIVO
 // ==========================================
 
-async function obterArquivoParaEscrita() {
+async function removerReferenciaArquivo() {
+    const banco = await abrirBanco();
+
+    return new Promise((resolve, reject) => {
+        const transacao = banco.transaction(
+            NOME_STORE,
+            "readwrite"
+        );
+
+        const store = transacao.objectStore(NOME_STORE);
+
+        store.delete(CHAVE_ARQUIVO);
+
+        transacao.oncomplete = () => {
+            banco.close();
+            resolve();
+        };
+
+        transacao.onerror = () => {
+            banco.close();
+            reject(transacao.error);
+        };
+    });
+}
+
+
+// ==========================================
+// 6. SELETOR DE ARQUIVO
+// ==========================================
+
+function abrirSeletorArquivo() {
     if (!window.showSaveFilePicker) {
         throw new Error(
             "Seu navegador não oferece suporte à seleção de arquivos."
         );
     }
 
-    let handle = await recuperarReferenciaArquivo();
-
-    // Primeira utilização: selecionar o arquivo.
-    if (!handle) {
-        handle = await window.showSaveFilePicker({
-            suggestedName: "participacao-semanal.txt",
-            types: [
-                {
-                    description: "Arquivo de texto",
-                    accept: {
-                        "text/plain": [".txt"]
-                    }
+    return window.showSaveFilePicker({
+        suggestedName: "participacao-semanal.txt",
+        types: [
+            {
+                description: "Arquivo de texto",
+                accept: {
+                    "text/plain": [".txt"]
                 }
-            ]
-        });
+            }
+        ]
+    });
+}
 
-        await salvarReferenciaArquivo(handle);
+
+// ==========================================
+// 7. OBTER ARQUIVO PARA ESCRITA
+// ==========================================
+
+async function obterArquivoParaEscrita() {
+    const handle = arquivoSalvo;
+
+    if (!handle) {
+        throw new Error(
+            "Nenhum arquivo foi selecionado."
+        );
     }
 
-    // Verificar permissão de escrita.
-    let permissao = await handle.queryPermission({
+    const permissao = await handle.requestPermission({
         mode: "readwrite"
     });
 
     if (permissao !== "granted") {
-        permissao = await handle.requestPermission({
-            mode: "readwrite"
-        });
-    }
+        arquivoSalvo = null;
 
-    if (permissao !== "granted") {
+        try {
+            await removerReferenciaArquivo();
+        } catch (erro) {
+            console.warn(
+                "Não foi possível remover a referência antiga:",
+                erro
+            );
+        }
+
         throw new Error(
-            "Permissão para atualizar o arquivo não concedida."
+            "A permissão para escrever no arquivo não foi concedida. Selecione o arquivo novamente."
         );
     }
 
@@ -155,22 +216,28 @@ async function obterArquivoParaEscrita() {
 
 
 // ==========================================
-// 5. ATUALIZAR ARQUIVO TXT
+// 8. ATUALIZAR ARQUIVO TXT
 // ==========================================
 
 async function atualizarArquivo(handle, conteudo) {
-    const writable = await handle.createWritable();
+    let writable;
 
     try {
+        writable = await handle.createWritable();
+
         await writable.write(conteudo);
+
         await writable.close();
 
         console.log("TXT atualizado com sucesso!");
+
     } catch (erro) {
-        try {
-            await writable.abort();
-        } catch (_) {
-            // Evita substituir o erro original.
+        if (writable) {
+            try {
+                await writable.abort();
+            } catch (_) {
+                // Preserva o erro original.
+            }
         }
 
         throw erro;
@@ -179,7 +246,7 @@ async function atualizarArquivo(handle, conteudo) {
 
 
 // ==========================================
-// 6. ATUALIZAR HORÁRIO NA INTERFACE
+// 9. ATUALIZAR HORÁRIO NA INTERFACE
 // ==========================================
 
 function atualizarHorario() {
@@ -202,18 +269,80 @@ function atualizarHorario() {
 
 
 // ==========================================
-// 7. EVENTO DO BOTÃO
+// 10. INICIALIZAÇÃO DO POPUP
 // ==========================================
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const btnCopiar = document.getElementById("btn-copiar");
 
     if (!btnCopiar) return;
 
+    btnCopiar.disabled = true;
+
+    try {
+        arquivoSalvo = await recuperarReferenciaArquivo();
+
+        console.log(
+            arquivoSalvo
+                ? "Referência do TXT recuperada."
+                : "Nenhum TXT selecionado ainda."
+        );
+
+    } catch (erro) {
+        console.error(
+            "Erro ao recuperar referência do TXT:",
+            erro
+        );
+
+        arquivoSalvo = null;
+
+    } finally {
+        btnCopiar.disabled = false;
+    }
+
+
+    // ==========================================
+    // 11. EVENTO DO BOTÃO
+    // ==========================================
+
     btnCopiar.addEventListener("click", async () => {
         btnCopiar.disabled = true;
 
+        atualizarStatus("Iniciando atualização...", "");
+
         try {
+            let arquivo = arquivoSalvo;
+
+            // ----------------------------------
+            // SELECIONAR ARQUIVO
+            // ----------------------------------
+
+            if (!arquivo) {
+                const selecao = abrirSeletorArquivo();
+
+                arquivo = await selecao;
+
+                arquivoSalvo = arquivo;
+
+                try {
+                    await salvarReferenciaArquivo(arquivo);
+
+                    console.log(
+                        "Referência do arquivo salva."
+                    );
+
+                } catch (erro) {
+                    console.warn(
+                        "Não foi possível salvar a referência no IndexedDB:",
+                        erro
+                    );
+                }
+
+            } else {
+                arquivo = await obterArquivoParaEscrita();
+            }
+
+
             // ----------------------------------
             // VALIDAR ABA ATUAL
             // ----------------------------------
@@ -232,15 +361,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
             }
 
-            // ----------------------------------
-            // OBTER REFERÊNCIA DO TXT
-            // ----------------------------------
-
-            const arquivo = await obterArquivoParaEscrita();
 
             // ----------------------------------
             // ATUALIZAR JOGADORES DO CLÃ
             // ----------------------------------
+
+            atualizarStatus("Carregando jogadores do clã...", "");
 
             await atualizarJogadoresAtivos(aba.id);
 
@@ -249,9 +375,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 JOGADORES_ATIVOS
             );
 
+
             // ----------------------------------
             // COLETAR PARTICIPAÇÃO
             // ----------------------------------
+
+            atualizarStatus("Coletando participação...", "");
 
             const { relatorio } = await coletarParticipacao(aba.id);
 
@@ -261,35 +390,50 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
             }
 
+
             // ----------------------------------
             // ATUALIZAR TXT
             // ----------------------------------
 
+            atualizarStatus("Atualizando arquivo TXT...", "");
+
             await atualizarArquivo(arquivo, relatorio);
 
-            // ----------------------------------
-            // EXIBIR JOGADORES E RELATÓRIO NO CONSOLE
-            // ----------------------------------
-
-            await chrome.scripting.executeScript({
-                target: {
-                    tabId: aba.id
-                },
-                args: [relatorio, [...JOGADORES_ATIVOS]],
-
-                func: (texto, jogadores) => {
-                    console.clear();
-
-                    console.log("RELATÓRIO DE PARTICIPAÇÃO:");
-                    console.log(texto);
-                }
-            });
-
-            // ----------------------------------
-            // ATUALIZAR HORÁRIO
-            // ----------------------------------
-
             atualizarHorario();
+
+            atualizarStatus(
+                "Relatório atualizado com sucesso!",
+                "sucesso"
+            );
+
+
+            // ----------------------------------
+            // EXIBIR RELATÓRIO NO CONSOLE DO VING
+            // ----------------------------------
+
+            try {
+                await chrome.scripting.executeScript({
+                    target: {
+                        tabId: aba.id
+                    },
+
+                    args: [relatorio],
+
+                    func: (texto) => {
+                        console.clear();
+
+                        console.log("RELATÓRIO DE PARTICIPAÇÃO:");
+                        console.log(texto);
+                    }
+                });
+
+            } catch (erro) {
+                console.warn(
+                    "TXT atualizado, mas não foi possível exibir o relatório no console:",
+                    erro
+                );
+            }
+
 
             console.log(
                 "Participação semanal atualizada com sucesso!"
@@ -301,6 +445,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     "Erro ao coletar participação:",
                     erro
                 );
+
+                atualizarStatus(
+                    erro.message || "Não foi possível atualizar o TXT.",
+                    "erro"
+                );
+            } else {
+                atualizarStatus("", "");
             }
 
         } finally {
